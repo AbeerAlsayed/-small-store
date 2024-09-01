@@ -27,4 +27,33 @@ class Handler extends ExceptionHandler
             //
         });
     }
+
+
+
+
+    public function render($request, Throwable $exception)
+    {
+        if ($exception instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Resource not found'
+            ], 404);
+        }
+
+        if ($exception instanceof \Illuminate\Auth\AuthenticationException) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated'
+            ], 401);
+        }
+
+        // Add more custom exception handling as needed
+
+        return response()->json([
+            'success' => false,
+            'message' => $exception->getMessage()
+        ], 500);
+    }
+
+
 }

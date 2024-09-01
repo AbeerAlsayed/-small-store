@@ -2,23 +2,18 @@
 
 namespace App\Models;
 
+use App\Traits\CreateFromTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 class Category extends Model
 {
-    use HasFactory;
+    use HasFactory,CreateFromTrait;
 
     protected $fillable=['name','slug','description','parent_id'];
 
     protected $appends = ['created_from'];
-
-    public function getCreatedFromAttribute()
-    {
-        $twoHoursAgo = Carbon::now()->subHours(2);
-        return $twoHoursAgo->diffForHumans();
-    }
 
     public function parent()
     {
@@ -27,7 +22,7 @@ class Category extends Model
 
     public function children()
     {
-        return $this->hasMany(Category::class, 'parent_id')->with('children');
+        return $this->hasMany(Category::class, 'parent_id')->with('children' , 'products');
     }
 
     public function products(){

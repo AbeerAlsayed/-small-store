@@ -4,96 +4,44 @@ namespace App\Http\Controllers;
 
 use App\Models\Image;
 use App\Models\Product;
+use App\services\CreateCategory;
+use App\services\CreateProduct;
 use App\Traits\UploadedFile;
 use Exception;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    use UploadedFile;
+    public CreateProduct $create_product;
+    public function __construct(CreateProduct $create_product){
+        $this->create_product = $create_product;
+    }
     public function index(){
-        try {
-            $products=Product::with('images')->get();
-            if ($products) {
-                return response()->json(['success' => true, 'Product' => $products,],200);
-            }
-        } catch (Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage(),],500);
-        }
+        $products=Product::with('images')->get();
+        return response()->json(['success' => true, 'Product' => $products,],200);
     }
 
     public function store(Request $request){
-        try {
-            $product=Product::create($request->all());
-            if ($request->hasFile('url')) {
-            $files = $request->file('url');
-            foreach ($files as $file) {
-                $filename = $file->getClientOriginalName();
-                $path = $file->storeAs('images', $filename, 'public');
-                Image::create([
-                    'imageable_id'=>$product->id,
-                    'imageable_type'=>Product::class,
-                    'url'=>$path,
-                ]);
-            }
-
-        }
-          if ($product) {
-              return response()->json(['product'=>$product,$product->images],200);
-            } else {
-                return response()->json(['success' => false, 'message' => "Some Problem"]);
-            }
-        } catch (Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage(),]);}
+        $product=$this->create_product->createProduct($request);
+        return response()->json(['success' => true, 'Product' => $product], 200);
     }
 
-    public function show($id)
-    {
-        try {
-            $product = Product::with('images')->find($id);
-            return response()->json(['success' => true, 'Product' => $product]);
-        } catch (Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage(),]);
-        }
+    public function show($id){
+        $product = Product::with('images')->find($id);
+        return response()->json(['success' => true, 'Product' => $product]);
     }
 
-    public function update(Request $request,$id)
-    {
-        try {
-            $product = Product::findOrFail($id);
-            $product->update($request->all());
-            if ($request->hasFile('url')) {
-                $files = $request->file('url');
-                foreach ($files as $file) {
-                    $filename = $file->getClientOriginalName();
-                    $path = $file->storeAs('images', $filename, 'public');
-                    Image::update([
-                        'imageable_id'=>$product->id,
-                        'imageable_type'=>Product::class,
-                        'url'=>$path,
-                    ]);
-                }
-
-            }
-            if ($product) {
-                return response()->json(['success' => true, 'message' => "Product Update Successfully",]);
-            } else {
-                return response()->json(['success' => false, 'message' => "Some Problem",]);
-            }
-        } catch (Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage(),]);
-        }
+    public function update(Request $request,$id){
+        $product=$this->create_product->createProduct($request);
+        return response()->json(['success' => true, 'Product' => $product], 200);
     }
 
     public function destroy($id)
     {
         $product = Product::findOrFail($id);
-        $result = $product->delete();
-        if ($result) {
-            return response()->json(['success' => true, 'message' => "Product Delete Successfully",]);
-        } else {
-            return response()->json(['success' => false, 'message' => "Some Problem",]);
-        }
+        $product->delete();
+        return response()->json(['success' => true, 'message' => "Product Delete Successfully",]);
+
     }
 
 

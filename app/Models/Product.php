@@ -2,23 +2,18 @@
 
 namespace App\Models;
 
+use App\Traits\CreateFromTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 class Product extends Model
 {
-    use HasFactory;
+    use HasFactory,CreateFromTrait;
 
     protected $fillable=['name','slug','description','price','category_id'];
 
     protected $appends = ['created_from'];
-
-    public function getCreatedFromAttribute()
-    {
-        $twoHoursAgo = Carbon::now()->subHours(2);
-        return $twoHoursAgo->diffForHumans();
-    }
 
     public function category(){
         return $this->belongsTo(Category::class);
