@@ -1,17 +1,18 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\category;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-class ImageUploadRequest extends FormRequest
+class RequestUpdateCategory extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,8 +23,10 @@ class ImageUploadRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'url' => 'required|image|mimes:jpg,png,jpeg,gif,svg|max:2048',
-            'alter_img'=>'required',
+            'parent_id' => 'nullable|exists:categories,id',
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'slug' => ['required', 'string', 'max:255', Rule::unique('categories')->ignore($this->category)],
         ];
     }
 }

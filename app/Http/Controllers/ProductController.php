@@ -2,13 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Image;
+use App\Http\Requests\SaveProductRequest;
 use App\Models\Product;
-use App\services\CreateCategory;
 use App\services\CreateProduct;
-use App\Traits\UploadedFile;
-use Exception;
-use Illuminate\Http\Request;
+
 
 class ProductController extends Controller
 {
@@ -21,28 +18,24 @@ class ProductController extends Controller
         return response()->json(['success' => true, 'Product' => $products,],200);
     }
 
-    public function store(Request $request){
-        $product=$this->create_product->createProduct($request);
-        return response()->json(['success' => true, 'Product' => $product], 200);
-    }
-
     public function show($id){
         $product = Product::with('images')->find($id);
         return response()->json(['success' => true, 'Product' => $product]);
     }
 
-    public function update(Request $request,$id){
+    public function store(SaveProductRequest $request){
         $product=$this->create_product->createProduct($request);
         return response()->json(['success' => true, 'Product' => $product], 200);
     }
 
-    public function destroy($id)
-    {
+    public function update(SaveProductRequest $request, $id){
+        $product=$this->create_product->updateProduct($request,$id);
+        return response()->json(['success' => true, 'Product' => $product], 200);
+    }
+
+    public function destroy($id){
         $product = Product::findOrFail($id);
         $product->delete();
         return response()->json(['success' => true, 'message' => "Product Delete Successfully",]);
-
     }
-
-
 }

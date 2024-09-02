@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->text('description')->nullable();
-            $table->foreignId('parent_id')->nullable()->constrained('categories','id')->nullOnDelete();
+            $table->foreignId('parent_id')->nullable()->constrained('categories', 'id')->cascadeOnDelete();
             $table->timestamps();
         });
     }
@@ -26,6 +26,9 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('categories', function (Blueprint $table) {
+            $table->dropForeign(['parent_id']);
+        });
         Schema::dropIfExists('categories');
     }
 };
