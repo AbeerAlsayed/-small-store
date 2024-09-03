@@ -35,8 +35,7 @@ class CategoryController extends Controller
     }
 
     public function update(Request $request,$id){
-
-
+        dd($request);
         $category=$this->create_category->updateCategory($request,$id);
         return response()->json(['success' => true, 'Category' => $category], 200);
     }

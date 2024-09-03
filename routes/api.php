@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\RegisterController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -27,8 +28,24 @@ Route::put('product/{id}',[ProductController::class,'update']);
 
 Route::get('categories',[CategoryController::class,'index']);
 Route::post('categories',[CategoryController::class,'store']);
-Route::post('categories/{id}',[CategoryController::class,'update']);
+Route::put('categories/{id}',[CategoryController::class,'update']);
 Route::get('categories/{id}',[CategoryController::class,'show']);
 Route::delete('categories/{id}',[CategoryController::class,'destroy']);
 
-Route::apiResource('orders', OrderController::class);
+Route::controller(RegisterController::class)->group(function(){
+    Route::post('register', 'register');
+    Route::post('login', 'login');
+});
+
+Route::middleware('auth:sanctum')->group( function () {
+    Route::apiResource('orders', OrderController::class);
+});
+
+//Route::get('orders',[OrderController::class,'index']);
+//Route::post('orders',[OrderController::class,'store']);
+//Route::post('orders/{id}',[OrderController::class,'update']);
+//Route::get('orders/{id}',[OrderController::class,'show']);
+//Route::delete('orders/{id}',[OrderController::class,'destroy']);
+
+
+Route::get('users',[OrderController::class,'get_user']);

@@ -4,19 +4,41 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\BaseController as BaseController;
 
-class OrderController extends Controller
+
+class OrderController extends BaseController
 {
-    public function index()
+    public function get_user(){
+        $user=User::all();
+        return $this->sendResponse($user, 'User retrieved successfully.');
+
+    }
+    public function index(Request $request)
     {
-        $orders = Order::all();
-        return response()->json($orders);
+        $status = $request->input('status');
+        dd($status);
+        $userId = auth()->id(); // Assuming you are using authentication
+        if ($status) {
+            $orders = Order::where('user_id', $userId)
+                ->where('status', $status)
+                ->get();
+        } else {
+            $orders = Order::where('user_id', $userId)
+                ->get()
+                ->groupBy('status');
+        }
+        return $this->sendResponse($orders, 'Order retrieved successfully.');
     }
 
     public function store(Request $request)
     {
+        $userId = auth()->id(); // Assuming you are using authentication
+
         $validator = Validator::make($request->all(), [
             'order_number' => 'required|string|unique:orders',
             'user_id' => 'required|exists:users,id',
@@ -29,19 +51,16 @@ class OrderController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors(),
-            ], 422);
+            return $this->sendError('Validation Error.', $validator->errors());
         }
+        $order = Order::where($request->user_id, $userId)->get()->create($request->all());
 
-        $order = Order::create($validator->validated());
+        if ($order) {
+            return $this->sendResponse($order, 'Order created successfully.');
+        }else{
+            return $this->sendError('error', ['error' =>'Order not created.']);
+}
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Order created successfully.',
-            'data' => $order,
-        ]);
     }
 
     public function show($id)
@@ -49,26 +68,13 @@ class OrderController extends Controller
         $order = Order::find($id);
 
         if (!$order) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order not found.',
-            ], 404);
+            return $this->sendError('Order not found.');
         }
-
-        return response()->json($order);
+        return $this->sendResponse($order, 'Order retrieved successfully.');
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Order $order)
     {
-        $order = Order::find($id);
-
-        if (!$order) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order not found.',
-            ], 404);
-        }
-
         $validator = Validator::make($request->all(), [
             'order_number' => 'required|string|unique:orders,order_number,' . $order->id,
             'user_id' => 'required|exists:users,id',
@@ -81,37 +87,21 @@ class OrderController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors(),
-            ], 422);
+            return $this->sendError('Validation Error.', $validator->errors());
         }
 
         $order->update($validator->validated());
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Order updated successfully.',
-            'data' => $order,
-        ]);
+        return $this->sendResponse($order, 'Order updated successfully.');
     }
 
-    public function destroy($id)
-    {
-        $order = Order::find($id);
 
-        if (!$order) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order not found.',
-            ], 404);
-        }
+    public function destroy(Order $order)
+    {
 
         $order->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Order deleted successfully.',
-        ]);
+        return $this->sendResponse([], 'Order deleted successfully.');
+
     }
 }
