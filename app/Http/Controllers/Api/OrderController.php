@@ -3,9 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\OrderRequest;
+use App\Http\Requests\OrderRequestUpdate;
 use App\Models\Order;
 use App\Models\User;
+use App\Notifications\OrderCreated;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\BaseController as BaseController;
@@ -18,10 +24,15 @@ class OrderController extends BaseController
         return $this->sendResponse($user, 'User retrieved successfully.');
 
     }
+    public function get_notify(){
+        $user=DB::table('notifications')->get();
+        return $this->sendResponse($user, 'User retrieved successfully.');
+
+    }
+
     public function index(Request $request)
     {
         $status = $request->input('status');
-        dd($status);
         $userId = auth()->id(); // Assuming you are using authentication
         if ($status) {
             $orders = Order::where('user_id', $userId)
@@ -35,34 +46,6 @@ class OrderController extends BaseController
         return $this->sendResponse($orders, 'Order retrieved successfully.');
     }
 
-    public function store(Request $request)
-    {
-        $userId = auth()->id(); // Assuming you are using authentication
-
-        $validator = Validator::make($request->all(), [
-            'order_number' => 'required|string|unique:orders',
-            'user_id' => 'required|exists:users,id',
-            'status' => 'required|in:pending,processing,completed,declined',
-            'grand_total' => 'required|numeric',
-            'item_count' => 'required|integer',
-            'is_paid' => 'required|boolean',
-            'payment_method' => 'required|in:cash_on_delivery,credit_card',
-            'notes' => 'nullable|string',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-        $order = Order::where($request->user_id, $userId)->get()->create($request->all());
-
-        if ($order) {
-            return $this->sendResponse($order, 'Order created successfully.');
-        }else{
-            return $this->sendError('error', ['error' =>'Order not created.']);
-}
-
-    }
-
     public function show($id)
     {
         $order = Order::find($id);
@@ -73,24 +56,37 @@ class OrderController extends BaseController
         return $this->sendResponse($order, 'Order retrieved successfully.');
     }
 
-    public function update(Request $request, Order $order)
+
+    public function store(OrderRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'order_number' => 'required|string|unique:orders,order_number,' . $order->id,
-            'user_id' => 'required|exists:users,id',
-            'status' => 'required|in:pending,processing,completed,declined',
-            'grand_total' => 'required|numeric',
-            'item_count' => 'required|integer',
-            'is_paid' => 'required|boolean',
-            'payment_method' => 'required|in:cash_on_delivery,credit_card',
-            'notes' => 'nullable|string',
+        $userId = auth()->id(); // Assuming you are using authentication
+
+        $order = Order::create([
+            'order_number' => uniqid('ORD-'),
+            'user_id' => $request->user_id,
+            'status' => 'pending',
+            'grand_total' => $request->quantity * $request->price,
+            'quantity' => $request->quantity,
+            'is_paid' => $request->is_paid,
+            'payment_method' => 'cash_on_delivery',
+            'notes' => $request->notes,
         ]);
 
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
+        $adminUser=User::where('role','admin')->get();
 
-        $order->update($validator->validated());
+        Notification::send($adminUser,new OrderCreated($order));
+
+        return $this->sendResponse(['order'=>$order,'adminUser'=>$adminUser], 'Order created successfully.');
+
+
+    }
+
+
+    public function update(OrderRequestUpdate $request, Order $order)
+    {
+
+
+        $order->update($request->all());
 
         return $this->sendResponse($order, 'Order updated successfully.');
     }

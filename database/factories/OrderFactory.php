@@ -24,7 +24,7 @@ class OrderFactory extends Factory
             'user_id' => \App\Models\User::factory(),
             'status' => $this->faker->randomElement(['pending', 'processing', 'completed', 'declined']),
             'grand_total' => $this->faker->randomFloat(2, 20, 500),
-            'item_count' => $this->faker->numberBetween(1, 10),
+            'quantity' => $this->faker->numberBetween(1, 10),
             'is_paid' => $this->faker->boolean,
             'payment_method' => $this->faker->randomElement(['cash_on_delivery', 'credit_card']),
             'notes' => $this->faker->sentence,

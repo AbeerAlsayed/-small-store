@@ -17,7 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->enum('status', ['pending', 'processing', 'completed', 'declined'])->default('pending');
             $table->float('grand_total');
-            $table->integer('item_count');
+            $table->integer('quantity');
             $table->boolean('is_paid')->default(false);
             $table->enum('payment_method', ['cash_on_delivery', 'credit_card'])->default('cash_on_delivery');
             $table->text('notes')->nullable();
