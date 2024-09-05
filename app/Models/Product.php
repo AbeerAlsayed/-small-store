@@ -11,7 +11,7 @@ class Product extends Model
 {
     use HasFactory,CreateFromTrait;
 
-    protected $fillable=['name','slug','description','price','category_id'];
+    protected $fillable=['name','slug','description','price','category_id','quantity'];
 
     protected $appends = ['created_from'];
 
@@ -22,5 +22,11 @@ class Product extends Model
     public function images()
     {
         return $this->morphMany(Image::class, 'imageable');
+    }
+    public function orders()
+    {
+        return $this->belongsToMany(Order::class, 'order_product')
+            ->withPivot('quantity', 'price')
+            ->withTimestamps();
     }
 }

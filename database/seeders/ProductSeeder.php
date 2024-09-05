@@ -19,7 +19,8 @@ class ProductSeeder extends Seeder
             'slug'=>Str::slug('php'),
             'description'=>'test one',
             'price'=>'2.5',
-            'category_id'=>'1'
+            'category_id'=>'1',
+            'quantity'=>'5',
         ]);
     }
 }

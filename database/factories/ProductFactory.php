@@ -26,6 +26,7 @@ class ProductFactory extends Factory
             'slug' => Str::slug($this->faker->unique()->words(3, true)),
             'description' => $this->faker->sentence,
             'price' => $this->faker->randomFloat(2, 10, 1000),
+            'quantity' => $this->faker->numberBetween(1, 10),
             'category_id' => \App\Models\Category::factory(),
         ];
     }

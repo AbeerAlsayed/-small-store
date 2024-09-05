@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\OrderRequest;
 use App\Http\Requests\OrderRequestUpdate;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\User;
 use App\Notifications\OrderCreated;
 use Illuminate\Http\Request;
@@ -59,34 +60,47 @@ class OrderController extends BaseController
 
     public function store(OrderRequest $request)
     {
-        $userId = auth()->id(); // Assuming you are using authentication
+        DB::transaction(function () use ($request) {
+            $order=Order::where('order_number',$request->order_number)->first();
+            if ($order) {
+                $order->quantity += $request->quantity;
+                $order->grand_total = $request->grand_total;
+                $order->save();
+            }else{
+                $product = Product::findOrFail($request->product_id);
+                if ($product->quantity >= $request->quantity) {
+                    $order = Order::create([
+                        'order_number' => uniqid('ORD-'),
+                        'user_id' => $request->user_id,
+                        'status' => 'pending',
+                        'grand_total' => $request->quantity * $request->price,
+                        'quantity' => $request->quantity,
+                        'is_paid' => $request->is_paid,
+                        'payment_method' => 'cash_on_delivery',
+                        'notes' => $request->notes,
+                    ]);
+                    $product->quantity -= $request->quantity;
+                    $product->save();
+                } else {
+                    return response()->json(['success' => false, 'message' => 'Not enough product quantity'], 400);
+                }
+            }
 
-        $order = Order::create([
-            'order_number' => uniqid('ORD-'),
-            'user_id' => $request->user_id,
-            'status' => 'pending',
-            'grand_total' => $request->quantity * $request->price,
-            'quantity' => $request->quantity,
-            'is_paid' => $request->is_paid,
-            'payment_method' => 'cash_on_delivery',
-            'notes' => $request->notes,
-        ]);
+            // Notify admin users
+            $adminUser = User::where('role', 'admin')->get();
+            Notification::send($adminUser, new OrderCreated($order));
 
-        $adminUser=User::where('role','admin')->get();
-
-        Notification::send($adminUser,new OrderCreated($order));
-
-        return $this->sendResponse(['order'=>$order,'adminUser'=>$adminUser], 'Order created successfully.');
-
-
+            return $this->sendResponse($order, 'Order processed successfully.');
+        });
     }
 
 
     public function update(OrderRequestUpdate $request, Order $order)
     {
-
-
-        $order->update($request->all());
+        $order = DB::transaction(function () use ($request, $order) {
+            $order->update($request->all());
+            return $order;
+        });
 
         return $this->sendResponse($order, 'Order updated successfully.');
     }
@@ -94,9 +108,9 @@ class OrderController extends BaseController
 
     public function destroy(Order $order)
     {
-
-        $order->delete();
-
+        DB::transaction(function () use ($order) {
+            $order->delete();
+        });
         return $this->sendResponse([], 'Order deleted successfully.');
 
     }
