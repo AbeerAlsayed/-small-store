@@ -31,6 +31,7 @@ class OrderService {
                         'is_paid' => $request->is_paid,
                         'payment_method' => $request->payment_method,
                         'notes' => $request->notes,
+                        'product_id' => $request->product_id,
                     ]);
                     $product->decrementQuantity($request->quantity);
                 } else {

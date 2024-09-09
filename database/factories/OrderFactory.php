@@ -22,6 +22,7 @@ class OrderFactory extends Factory
         return [
             'order_number' => $this->faker->unique()->numerify('ORD-#####'),
             'user_id' => \App\Models\User::factory(),
+            'product_id' => \App\Models\Product::factory(),
             'status' => $this->faker->randomElement(['pending', 'processing', 'completed', 'declined']),
             'grand_total' => $this->faker->randomFloat(2, 20, 500),
             'quantity' => $this->faker->numberBetween(1, 10),
