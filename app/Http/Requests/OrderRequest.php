@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Order;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class OrderRequest extends FormRequest
 {
@@ -19,13 +21,11 @@ class OrderRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-    public function rules(): array
+    public function rules(Order $order): array
     {
         return [
-            'order_number' => 'required|string|unique:orders',
-            'user_id' => 'required|exists:users,id',
+            'order_number' =>'required', 'string', Rule::unique('orders')->ignore($order->id),
             'status' => 'required|in:pending,processing,completed,declined',
-            'price' => 'required|numeric',
             'quantity' => 'required|integer',
             'is_paid' => 'required|boolean',
             'payment_method' => 'required|in:cash_on_delivery,credit_card',

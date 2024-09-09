@@ -17,19 +17,9 @@ class CreateCategory{
         $this->uploadFile($request,'url',$category,Category::class);
         return $category;
     }
-    public function updateCategory(Request $request ,$id){
+    public function updateCategory(RequestUpdateCategory $request ,$id){
         $category= Category::findOrFail($id);
-
-        $validator = Validator::make($request->all(), [
-            'parent_id' => 'nullable|exists:categories,id',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'slug' => 'required|string|max:255|unique:categories,slug,' . $category->id,
-        ]);
-        if ($validator->fails()) {
-            return response()->json(['success' => false, 'errors' => $validator->errors(),], 422);
-        }
-        $category->update($validator->validated());
+        $category->update($request->all());
         $this->updateFile($request,'url',$category,Category::class);
         return $category;
     }

@@ -15,12 +15,13 @@ return new class extends Migration
             $table->id();
             $table->string('order_number')->unique();
             $table->unsignedBigInteger('user_id');
-            $table->enum('status', ['pending', 'processing', 'completed', 'declined'])->default('pending');
+            $table->enum('status', ['pending', 'processing', 'completed', 'declined','delivered'])->default('pending');
             $table->float('grand_total');
             $table->integer('quantity');
             $table->boolean('is_paid')->default(false);
             $table->enum('payment_method', ['cash_on_delivery', 'credit_card'])->default('cash_on_delivery');
             $table->text('notes')->nullable();
+            $table->foreignId('product_id')->constrained()->onDelete('cascade');
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

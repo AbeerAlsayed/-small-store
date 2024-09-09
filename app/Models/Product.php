@@ -23,10 +23,18 @@ class Product extends Model
     {
         return $this->morphMany(Image::class, 'imageable');
     }
-    public function orders()
-    {
-        return $this->belongsToMany(Order::class, 'order_product')
-            ->withPivot('quantity', 'price')
-            ->withTimestamps();
+
+    public function order() {
+        return $this->hasOne(Order::class);
+    }
+
+    public function incrementQuantity($amount) {
+        $this->quantity += $amount;
+        $this->save();
+    }
+
+    public function decrementQuantity($amount) {
+        $this->quantity -= $amount;
+        $this->save();
     }
 }

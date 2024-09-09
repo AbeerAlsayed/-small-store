@@ -1,19 +1,18 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\BaseController;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\category\RequestUpdateCategory;
 use App\Http\Requests\category\StoreRequest;
-use App\Http\Requests\RequestCategory;
 use App\Models\Category;
 use App\Models\Product;
 use App\services\CreateCategory;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
 
 
-class CategoryController extends Controller
+class CategoryController extends BaseController
 {
     public CreateCategory $create_category;
     public function __construct(CreateCategory $create_category){
@@ -21,29 +20,28 @@ class CategoryController extends Controller
     }
     public function index(){
         $categories = Category::whereNull('parent_id')->with(['children', 'products', 'images'])->get();
-        return response()->json(['success' => true, 'Category' => $categories], 200);
+        return $this->sendResponse(['success' => true, 'Category' => $categories], 200);
     }
 
     public function show($id){
         $category = Category::with(['children', 'products','images'])->find($id);
-        return response()->json(['category'=>$category,'success' => true, 'message' => "Category show Successfully",]);
+        return $this->sendResponse(['category'=>$category,'success' => true, 'message' => "Category show Successfully",],200);
     }
 
     public function store(StoreRequest $request){
         $category=$this->create_category->createCategory($request);
-        return response()->json(['success' => true, 'Category' => $category], 200);
+        return $this->sendResponse(['success' => true, 'Category' => $category], 200);
     }
 
-    public function update(Request $request,$id){
-        dd($request);
+    public function update(RequestUpdateCategory $request,$id){
         $category=$this->create_category->updateCategory($request,$id);
-        return response()->json(['success' => true, 'Category' => $category], 200);
+        return $this->sendResponse(['success' => true, 'Category' => $category], 200);
     }
 
     public function destroy($id) {
         Product::where('category_id', $id)->delete();
         $category = Category::findOrFail($id);
         $category->delete();
-        return response()->json(['success' => true, 'message' => "Category Deleted Successfully"]);
+        return $this->sendResponse(['success' => true, 'message' => "Category Deleted Successfully"],200);
     }
 }
